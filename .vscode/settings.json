@@ -1,0 +1,10 @@
+{
+    "terminal.integrated.env.osx": {
+        "PATH": "/Users/haiyang.song/.platformio/penv/bin:/Users/haiyang.song/.platformio/penv:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/Library/Frameworks/Python.framework/Versions/3.6/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/Library/Frameworks/Python.framework/Versions/3.6/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/bin/:/Users/haiyang.song/Program/apache-maven-3.3.1/bin/:/Library/Java/JavaVirtualMachines/jdk1.8.0_171.jdk/Contents/Home/bin/:/Users/haiyang.song/Program/apache-maven-3.3.1/bin/:/Users/haiyang.song/Program/n//bin",
+        "PLATFORMIO_CALLER": "vscode"
+    },
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/joker/.platformio/penv/bin:/home/joker/.platformio/penv:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+        "PLATFORMIO_CALLER": "vscode"
+    }
+}

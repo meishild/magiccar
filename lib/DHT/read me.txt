@@ -1,0 +1,6 @@
+DHT11:
+    Measurement Range : 20-90%RH 0-50 ℃
+    Humidity Accuracy : ±5％RH
+    Temperature Accuracy : ±2℃
+    Resolution : 1
+    Package : 4 Pin Single Row
