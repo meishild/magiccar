@@ -1,4 +1,7 @@
 /*
+Version 1.0:根据命令(串口通信或者蓝牙通信)能控制小车执行前进、后退、停止、左转、右转。
+Depend:+9V电源、小车车架、轮胎以及电机、l298n控制板、蓝牙从机、arduino板子。
+
 Control Commands (They are remote commands. So add the router prefix "0x50 0x01 0x02".)
 Forward: "0x50 0x01 0x02 0x70\r\n"
 Backward: "0x50 0x01 0x02 0x71\r\n"
@@ -101,7 +104,7 @@ ERxL298NMotorService motorService;
 #define E3 6 // Right motor
 #define M3 7
 #define E4 8 // Left motor
-#define M4 8
+#define M4 9
 
 void setup()
 {
@@ -127,5 +130,4 @@ void setup()
 void loop()
 {
 	host.Run();
-	Serial.println("System ready!");
 }
