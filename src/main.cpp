@@ -76,6 +76,10 @@ Arduino 	Bluetooth
 // ***IMPORTANT*** :Set true on the coordinator, and false on end device.
 #define ROUTER_RELAY_ENABLE true
 
+#define DEBUG_SERIAl Serial1
+
+#define UART_SERIAL Serial2
+
 //-----------------------------------------------------------------------------------------
 
 // Allocate the buffers
@@ -93,8 +97,8 @@ static uint8_t sRouterBuffer[ROUTER_BUFFER_SIZE];
 // Define the host and the supported services
 ERxHost host(sCmdBuffer, COMMAND_PARAMETER_BUFFER_SIZE, sResultBuffer, RESULT_BUFFER_SIZE);
 ERxSystemService sysService(&host);
-ERxUARTCmdReceiverService uartService(&Serial);
-ERxMessageRouterService routerService(&host, &Serial, sRouterBuffer, ROUTER_BUFFER_SIZE);
+ERxUARTCmdReceiverService uartService(&UART_SERIAL);
+ERxMessageRouterService routerService(&host, &UART_SERIAL, sRouterBuffer, ROUTER_BUFFER_SIZE);
 ERxL298NMotorService motorService;
 
 #define E1 2 // Left motor
@@ -108,7 +112,7 @@ ERxL298NMotorService motorService;
 
 void setup()
 {
-	Serial.begin(9600);
+	DEBUG_SERIAl.begin(9600);
 
 	// Set the address.
 	host.SetMyAddress(MY_ADDRESS);
