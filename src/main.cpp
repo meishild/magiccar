@@ -62,43 +62,16 @@ Arduino 	Bluetooth
 
 */
 
-#include <ERxL298N.h>
-#include <ERxL298NMotorService.h>
-#include <ERxTextMessage.h>
-#include <ERxHost.h>
-#include <ERxSystemService.h>
-#include <ERxUARTCmdReceiverService.h>
-#include <ERxMessageRouterService.h>
-
-//--------------CONFIGURATION-------------------------------------------------------------
-// Macro definitions which require modifying for different harwares.
-#define MY_ADDRESS 0x01
-// ***IMPORTANT*** :Set true on the coordinator, and false on end device.
-#define ROUTER_RELAY_ENABLE false
+#include <L298NMotorService.h>
+#include <UARTCmdReceiverService.h>
 
 #define DEBUG_SERIAl Serial
 #define UART_SERIAL Serial
 
 //-----------------------------------------------------------------------------------------
-
-// Allocate the buffers
-#define COMMAND_PARAMETER_BUFFER_SIZE 128
-#define RESULT_BUFFER_SIZE 128
-static uint8_t sCmdBuffer[COMMAND_PARAMETER_BUFFER_SIZE];
-static uint8_t sResultBuffer[RESULT_BUFFER_SIZE];
-
-// XBee
-// AES encryption dictates that the maximum RF packet size is 95 Bytes.
-// The XBee buffer size is 95. To make sure the message sent to XBee is packed into a package, this buffer should be less than 95.
-#define ROUTER_BUFFER_SIZE 90
-static uint8_t sRouterBuffer[ROUTER_BUFFER_SIZE];
-
 // Define the host and the supported services
-ERxHost host(sCmdBuffer, COMMAND_PARAMETER_BUFFER_SIZE, sResultBuffer, RESULT_BUFFER_SIZE);
-ERxMessageRouterService routerService(&host, &UART_SERIAL, sRouterBuffer, ROUTER_BUFFER_SIZE);
-ERxSystemService sysService(&host);
-ERxUARTCmdReceiverService uartService(&UART_SERIAL);
-ERxL298NMotorService motorService;
+UARTCmdReceiverService uartService(&UART_SERIAL);
+L298NMotorService motorService;
 
 #define E1 2 // Left motor
 #define M1 3
@@ -113,15 +86,6 @@ void setup()
 {
 	DEBUG_SERIAl.begin(9600);
 
-	// Set the address.
-	host.SetMyAddress(MY_ADDRESS);
-	routerService.SetRelayMessage(ROUTER_RELAY_ENABLE); // IMPORTANT: Only set true on the coordinator
-
-	// Add service to host.
-	host.AddService(&sysService);
-	host.AddService(&uartService);
-	host.AddService(&routerService);
-	host.AddService(&motorService);
 	motorService.addLeftMotor(E1, M1);
 	motorService.addLeftMotor(E4, M4);
 	motorService.addRightMotor(E2, M2);
@@ -132,5 +96,21 @@ void setup()
 
 void loop()
 {
-	host.Run();
+	uartService.populate();
+
+	if (!uartService.hasValidCommand())
+	{
+		delay(10);
+		return;
+	}
+
+	int commandId = uartService.getCommandId();
+	uartService.invalidateCommand();
+
+	Serial.println(commandId);
+
+	bool res = motorService.execute(commandId);
+	Serial.print(commandId);
+	Serial.print(",");
+	Serial.println(res);
 }

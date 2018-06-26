@@ -1,7 +1,7 @@
 /*
 
 ***************************************
-This service is deprecated by the ERxMotorService.
+This service is deprecated by the MotorService.
 ***************************************
 
 This service is for the motor driven robot car. 
@@ -28,10 +28,9 @@ Result format
 
 */
 #pragma once
-#ifndef ERX_L298N_MOTOR_SERVICE_H
-#define ERX_L298N_MOTOR_SERVICE_H
+#ifndef _L298N_MOTOR_SERVICE_H
+#define _L298N_MOTOR_SERVICE_H
 
-#include <ERxService.h>
 
 // Define the maximum motors for each set.
 #define MAX_MOTORS 4
@@ -43,20 +42,17 @@ Result format
 #define CMD_ROBOT_TURN_LEFT 0x73
 #define CMD_ROBOT_STOP 0x74
 
-class ERxL298N;
+class L298N;
 
-class ERxL298NMotorService : public ERxService
+class L298NMotorService
 {
 public:
-	ERxL298NMotorService();
+	L298NMotorService();
 
 public:
 
 	// Execute the command saved in the context. The result is output to the context.
-	virtual void Execute(ERxServiceContext& context);
-
-	// Print the help message of this service. 
-	virtual void PrintHelp(ERxServiceContext& context);
+	bool execute(unsigned int commandId);
 
 public:
 	// Add a motor to the left set of the robot.
@@ -72,8 +68,8 @@ private:
 	void stop();
 
 private:
-	ERxL298N *m_leftMotors[MAX_MOTORS];
-	ERxL298N *m_rightMotors[MAX_MOTORS];
+	L298N *m_leftMotors[MAX_MOTORS];
+	L298N *m_rightMotors[MAX_MOTORS];
 };
 
-#endif // ERX_L298N_MOTOR_SERVICE_H
+#endif // _L298N_MOTOR_SERVICE_H

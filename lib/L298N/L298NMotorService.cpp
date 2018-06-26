@@ -1,6 +1,5 @@
-#include "ERxL298NMotorService.h"
-#include <ERxL298N.h>
-#include <ERxServiceContext.h>
+#include "L298NMotorService.h"
+#include <L298N.h>
 
 // #define ENABLE_DEBUG_MESSAGE
 
@@ -25,19 +24,19 @@ void DEBUG_PRINT(T message)
 #define DEBUG_PRINT(message)
 #endif
 
-ERxL298NMotorService::ERxL298NMotorService()
+L298NMotorService::L298NMotorService()
 {
 	// initialize
 	for(int i=0; i<MAX_MOTORS; i++){
-		m_leftMotors[i]=NULL;
-		m_rightMotors[i]=NULL;
+		m_leftMotors[i]=0;
+		m_rightMotors[i]=0;
 	}
 }
 
-bool ERxL298NMotorService::addLeftMotor(unsigned char e, unsigned char m, bool reverse/*=false*/){
+bool L298NMotorService::addLeftMotor(unsigned char e, unsigned char m, bool reverse/*=false*/){
 	for(int i=0; i<MAX_MOTORS; i++){
 		if(!m_leftMotors[i]){
-			m_leftMotors[i] = new ERxL298N(e, m, reverse);
+			m_leftMotors[i] = new L298N(e, m, reverse);
 			DEBUG_PRINT("add left motor: ");
 			DEBUG_PRINT_LN(i);
 			return true;
@@ -46,16 +45,16 @@ bool ERxL298NMotorService::addLeftMotor(unsigned char e, unsigned char m, bool r
 	return false;
 }
 
-bool ERxL298NMotorService::addRightMotor(unsigned char e, unsigned char m, bool reverse/*=false*/){
+bool L298NMotorService::addRightMotor(unsigned char e, unsigned char m, bool reverse/*=false*/){
 	for(int i=0; i<MAX_MOTORS; i++){
 		if(!m_rightMotors[i]){
-			m_rightMotors[i] = new ERxL298N(e, m, reverse);
+			m_rightMotors[i] = new L298N(e, m, reverse);
 			return true;
 		}
 	}
 	return false;
 }
-void ERxL298NMotorService::forward()
+void L298NMotorService::forward()
 {
 	DEBUG_PRINT("Move forward: ");
 
@@ -72,7 +71,7 @@ void ERxL298NMotorService::forward()
 
 	DEBUG_PRINT_LN(' ');
 }
-void ERxL298NMotorService::backward()
+void L298NMotorService::backward()
 {
 	for(int i=0; i<MAX_MOTORS; i++){
 		if(m_leftMotors[i]){
@@ -83,7 +82,7 @@ void ERxL298NMotorService::backward()
 		}
 	}
 }
-void ERxL298NMotorService::turnLeft()
+void L298NMotorService::turnLeft()
 {
 	DEBUG_PRINT("Turn left: ");
 	
@@ -100,7 +99,7 @@ void ERxL298NMotorService::turnLeft()
 
 	DEBUG_PRINT_LN(' ');
 }
-void ERxL298NMotorService::turnRight()
+void L298NMotorService::turnRight()
 {
 	for(int i=0; i<MAX_MOTORS; i++){
 		if(m_leftMotors[i]){
@@ -111,7 +110,7 @@ void ERxL298NMotorService::turnRight()
 		}
 	}
 }
-void ERxL298NMotorService::stop()
+void L298NMotorService::stop()
 {
 	for(int i=0; i<MAX_MOTORS; i++){
 		if(m_leftMotors[i]){
@@ -123,7 +122,7 @@ void ERxL298NMotorService::stop()
 	}
 }
 
-void ERxL298NMotorService::Execute(ERxServiceContext& context)
+bool L298NMotorService::execute(unsigned int commandId)
 {
 	bool handled = true;
 	/*
@@ -135,7 +134,7 @@ void ERxL298NMotorService::Execute(ERxServiceContext& context)
 	<CMD_ROBOT_STOP><CR><LF>
 	*/
 
-	switch (context.GetCommandId())
+	switch (commandId)
 	{
 	case CMD_ROBOT_FORWARD: 
 		{
@@ -166,21 +165,5 @@ void ERxL298NMotorService::Execute(ERxServiceContext& context)
 		handled = false;
 		break;
 	}
-
-	if(handled){
-		ERxOutputStream& rResultStream = context.GetResultStream();
-		rResultStream.print("OK");
-		rResultStream.print("\r\n");
-
-		context.SetIsCommandExecuted(true);
-		context.SetIsCommandSuccess(true);
-	}
-}
-
-void ERxL298NMotorService::PrintHelp(ERxServiceContext& context)
-{
-	ERxOutputStream& rResultStream = context.GetResultStream();
-
-	PROG(serviceName) = "> ERxL298NMotorService\r\n";
-	rResultStream.printP(serviceName);
+	return handled;
 }

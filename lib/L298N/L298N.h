@@ -1,5 +1,5 @@
 /*
-ERxL298N.h - library for Arduino to control L298N DC motor driver. 
+L298N.h - library for Arduino to control L298N DC motor driver. 
 Copyright (c) 2011 Jeffrey Sun.  All right reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -76,19 +76,12 @@ L298N reference: http://item.taobao.com/item.htm?spm=a1z09.2.9.11.fVbF4K&id=2272
 
 */
 
-#ifndef ERXL298N_H
-#define ERXL298N_H
+#ifndef L298N_H
+#define L298N_H
 
 #include <Arduino.h>
-#include <ERxIMotor.h>
 
-/*
-1.0, 4 October 2014, Add the initial version of the library.
-2.0, 2 November 2014,  Make this class derived from ERxIMotor.
-*/
-#define L298N_LIB_VER "2.0"
-
-class ERxL298N : public ERxIMotor
+class L298N
 {
 public:
 	/*
@@ -99,7 +92,7 @@ public:
 	@param {unsigned char} m the pin index of Arduino which connects to the M1/2 pin of L298N.
 	@param {bool} reverse indicate if reverse the direction.
 	*/
-	ERxL298N(unsigned char e, unsigned char m, bool reverse = false);
+	L298N(unsigned char e, unsigned char m, bool reverse = false);
 
 public:
 	virtual void forward(unsigned int speed = 0);
@@ -111,4 +104,4 @@ private:
 	unsigned char 	m_m;
 	bool			m_reverse;
 };
-#endif // ERXL298N_H
+#endif // L298N_H
