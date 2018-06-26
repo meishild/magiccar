@@ -67,18 +67,17 @@ Arduino 	Bluetooth
 #include <ERxTextMessage.h>
 #include <ERxHost.h>
 #include <ERxSystemService.h>
-#include <ERxMessageRouterService.h>
 #include <ERxUARTCmdReceiverService.h>
+#include <ERxMessageRouterService.h>
 
 //--------------CONFIGURATION-------------------------------------------------------------
 // Macro definitions which require modifying for different harwares.
 #define MY_ADDRESS 0x01
 // ***IMPORTANT*** :Set true on the coordinator, and false on end device.
-#define ROUTER_RELAY_ENABLE true
+#define ROUTER_RELAY_ENABLE false
 
-#define DEBUG_SERIAl Serial1
-
-#define UART_SERIAL Serial2
+#define DEBUG_SERIAl Serial
+#define UART_SERIAL Serial
 
 //-----------------------------------------------------------------------------------------
 
@@ -96,9 +95,9 @@ static uint8_t sRouterBuffer[ROUTER_BUFFER_SIZE];
 
 // Define the host and the supported services
 ERxHost host(sCmdBuffer, COMMAND_PARAMETER_BUFFER_SIZE, sResultBuffer, RESULT_BUFFER_SIZE);
+ERxMessageRouterService routerService(&host, &UART_SERIAL, sRouterBuffer, ROUTER_BUFFER_SIZE);
 ERxSystemService sysService(&host);
 ERxUARTCmdReceiverService uartService(&UART_SERIAL);
-ERxMessageRouterService routerService(&host, &UART_SERIAL, sRouterBuffer, ROUTER_BUFFER_SIZE);
 ERxL298NMotorService motorService;
 
 #define E1 2 // Left motor
@@ -128,7 +127,7 @@ void setup()
 	motorService.addRightMotor(E2, M2);
 	motorService.addRightMotor(E3, M3);
 
-	Serial.println("System startup!");
+	DEBUG_SERIAl.println("System startup!");
 }
 
 void loop()
