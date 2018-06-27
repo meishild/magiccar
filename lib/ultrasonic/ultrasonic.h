@@ -4,8 +4,7 @@
 #include <Arduino.h>
 
 #define OK 1
-#define ERR_CHECK 0
-#define ERR_TIMEOUT -1
+#define ERROR 0
 
 /**
  * 读取一个引脚的脉冲（HIGH或LOW）。
@@ -20,6 +19,10 @@
  *    接收到高电平的时间 * 17 / 1000  (cm)
  **/
 
+//最远测量距离，单位厘米
+#define MAX_DISTANCE 40
+//超时时间单位微秒 MAX_DISTANCE * 1000 / 17
+#define MAX_TIMEOUT 2000
 class Ultrasoinc
 {
 public:

@@ -60,6 +60,7 @@ Arduino 	Bluetooth
 
 #include <L298NMotorService.h>
 #include <SerialCommands.h>
+#include <ultrasonic.h>
 
 #define DEBUG_SERIAL Serial
 #define UART_SERIAL Serial3
@@ -67,6 +68,7 @@ Arduino 	Bluetooth
 //-----------------------------------------------------------------------------------------
 L298NMotorService motorService;
 
+// 设置驱动轮
 #define E1 2 // Left motor
 #define M1 3
 #define E2 4 // Right motor
@@ -76,10 +78,18 @@ L298NMotorService motorService;
 #define E4 8 // Left motor
 #define M4 9
 
+// 设置超声波
+#define TPIN 11
+#define EPIN 12
+
+// 设置超声波安全距离
+#define SENSOR_SAFE 10
+
 //-----------------------------------------------------------------------------------------
 char serial_command_buffer[128];
 SerialCommands serial_commands(&UART_SERIAL, serial_command_buffer, sizeof(serial_command_buffer), "\r\n", " ");
 
+Ultrasoinc forwartUltrasoinc(TPIN, EPIN);
 
 void cmd_unrecognized(SerialCommands *sender, const char *cmd)
 {
@@ -105,22 +115,39 @@ void cmd_driver(SerialCommands *sender)
 	DEBUG_SERIAL.println(res ? "SUCCESS" : "FAIL");
 }
 
-void cmd_connected(SerialCommands *sender)
+void cmd_uart_connected(SerialCommands *sender)
 {
 	DEBUG_SERIAL.println("CMD:UART->CONNECTED");
 }
 
-void cmd_discon(SerialCommands *sender)
+void cmd_uart_discon(SerialCommands *sender)
 {
 	DEBUG_SERIAL.println("CMD:UART->DISCON");
 }
 
 //Note: Commands are case sensitive
 SerialCommand cmdDriver("DT", cmd_driver);
-SerialCommand cmdConnected("CONNECTED\r", cmd_connected);
-SerialCommand cmdDiscon("+DISC:SUCCESS\r", cmd_discon);
+SerialCommand cmdUARTConnected("CONNECTED\r", cmd_uart_connected);
+SerialCommand cmdUARTDiscon("+DISC:SUCCESS\r", cmd_uart_discon);
 
 //-----------------------------------------------------------------------------------------
+
+bool sensor_ultrasonic_stop()
+{
+	if(forwartUltrasoinc.read() == ERROR){
+		DEBUG_SERIAL.println("SENSOR:READ ERROR");
+		return false;
+	}
+	
+	if (forwartUltrasoinc.distance < SENSOR_SAFE)
+	{
+		DEBUG_SERIAL.print("SENSOR:STOP,");
+		DEBUG_SERIAL.print(forwartUltrasoinc.distance);
+		DEBUG_SERIAL.println("cm");
+		return true;
+	}
+	return true;
+}
 
 void setup()
 {
@@ -131,11 +158,12 @@ void setup()
 	motorService.addLeftMotor(E4, M4);
 	motorService.addRightMotor(E2, M2);
 	motorService.addRightMotor(E3, M3);
+	motorService.addForwardSafeSensor(sensor_ultrasonic_stop);
 
 	serial_commands.SetDefaultHandler(cmd_unrecognized);
 	serial_commands.AddCommand(&cmdDriver);
-	serial_commands.AddCommand(&cmdConnected);
-	serial_commands.AddCommand(&cmdDiscon);
+	serial_commands.AddCommand(&cmdUARTConnected);
+	serial_commands.AddCommand(&cmdUARTDiscon);
 
 	DEBUG_SERIAL.println("System startup!");
 }

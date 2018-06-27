@@ -13,7 +13,6 @@ unsigned char Ultrasoinc::read()
 {
     float filter_buf[_filterSize];
 
-   
     for (int i = 0; i < _filterSize; i++)
     {
         digitalWrite(_trigPin, LOW); //低高低电平发一个短时间脉冲去TrigPin
@@ -21,8 +20,13 @@ unsigned char Ultrasoinc::read()
         digitalWrite(_trigPin, HIGH);
         delayMicroseconds(20);
         digitalWrite(_trigPin, LOW);
-        filter_buf[i] = pulseIn(_echoPin, HIGH) * 17 / 1000;
+        filter_buf[i] = pulseIn(_echoPin, HIGH, MAX_TIMEOUT) * 17 / 1000;
+        if (filter_buf[i] == 0.00)
+        {
+            return ERROR;
+        }
     }
+    Serial.print("return ERROR2 ");
 
     // 采样值从小到大排列（冒泡法）
     for (int j = 0; j < _filterSize - 1; j++)
