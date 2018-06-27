@@ -2,15 +2,13 @@
 Version 1.0:根据命令(串口通信或者蓝牙通信)能控制小车执行前进、后退、停止、左转、右转。
 Depend:+9V电源、小车车架、轮胎以及电机、l298n控制板、蓝牙从机、arduino板子。
 
-Control Commands (They are remote commands. So add the router prefix "0x50 0x01 0x02".)
-Forward: "DR 11\r\n"
-Backward: "0x71\r\n"
-Turn right: "0x72\r\n"
-Turn Left: "0x73\r\n"
-Stop: "0x74\r\n"
+控制命令:
 
-Command flow
-PC --> UART --> ERxTextMessage --> UARTCmdReceiverService --> L298NMotorService 
+前进：   "DT 11\r\n" 
+后退：   "DT 12\r\n"
+左转：   "DT 13\r\n"
+右转：   "DT 14\r\n"
+停止：   "DT 15\r\n"
 
 The circuit:
 ---------------------------------------------
@@ -66,11 +64,7 @@ Arduino 	Bluetooth
 #define DEBUG_SERIAL Serial
 #define UART_SERIAL Serial3
 
-char serial_command_buffer[128];
-SerialCommands serial_commands(&UART_SERIAL, serial_command_buffer, sizeof(serial_command_buffer), "\r\n", " ");
-
 //-----------------------------------------------------------------------------------------
-// Define the host and the supported services
 L298NMotorService motorService;
 
 #define E1 2 // Left motor
@@ -81,6 +75,11 @@ L298NMotorService motorService;
 #define M3 7
 #define E4 8 // Left motor
 #define M4 9
+
+//-----------------------------------------------------------------------------------------
+char serial_command_buffer[128];
+SerialCommands serial_commands(&UART_SERIAL, serial_command_buffer, sizeof(serial_command_buffer), "\r\n", " ");
+
 
 void cmd_unrecognized(SerialCommands *sender, const char *cmd)
 {
@@ -106,18 +105,22 @@ void cmd_driver(SerialCommands *sender)
 	DEBUG_SERIAL.println(res ? "SUCCESS" : "FAIL");
 }
 
-void cmd_connected(SerialCommands *sender){
+void cmd_connected(SerialCommands *sender)
+{
 	DEBUG_SERIAL.println("CMD:UART->CONNECTED");
 }
 
-void cmd_discon(SerialCommands *sender){
+void cmd_discon(SerialCommands *sender)
+{
 	DEBUG_SERIAL.println("CMD:UART->DISCON");
 }
 
 //Note: Commands are case sensitive
-SerialCommand cmdDriver("DR", cmd_driver);
+SerialCommand cmdDriver("DT", cmd_driver);
 SerialCommand cmdConnected("CONNECTED\r", cmd_connected);
 SerialCommand cmdDiscon("+DISC:SUCCESS\r", cmd_discon);
+
+//-----------------------------------------------------------------------------------------
 
 void setup()
 {
@@ -139,5 +142,10 @@ void setup()
 
 void loop()
 {
-	serial_commands.ReadSerial();
+	SERIAL_COMMANDS_ERRORS err = serial_commands.ReadSerial();
+	if (err == SERIAL_COMMANDS_ERROR_BUFFER_FULL)
+	{
+		DEBUG_SERIAL.println("ERR:FULL COMMANED BUFFER!");
+		serial_commands.ClearBuffer();
+	}
 }
