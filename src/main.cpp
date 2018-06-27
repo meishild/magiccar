@@ -3,16 +3,14 @@ Version 1.0:根据命令(串口通信或者蓝牙通信)能控制小车执行前
 Depend:+9V电源、小车车架、轮胎以及电机、l298n控制板、蓝牙从机、arduino板子。
 
 Control Commands (They are remote commands. So add the router prefix "0x50 0x01 0x02".)
-Forward: "0x50 0x01 0x02 0x70\r\n"
-Backward: "0x50 0x01 0x02 0x71\r\n"
-Turn right: "0x50 0x01 0x02 0x72\r\n"
-Turn Left: "0x50 0x01 0x02 0x73\r\n"
-Stop: "0x50 0x01 0x02 0x74\r\n"
-Help: "0x50 0x01 0x02 0x01\r\n"
+Forward: "DR 11\r\n"
+Backward: "0x71\r\n"
+Turn right: "0x72\r\n"
+Turn Left: "0x73\r\n"
+Stop: "0x74\r\n"
 
 Command flow
-PC --> UART --> ERxTextMessage --> ERxUARTCmdReceiverService --> ERxMessageRouterService (override result stream) --> ERxHost.Execute() --> ERxL298NMotorService -->
-PC <-- UART <-- ERxRedirectOutputStream <------------------------------------------------- (execution result)
+PC --> UART --> ERxTextMessage --> UARTCmdReceiverService --> L298NMotorService 
 
 The circuit:
 ---------------------------------------------
@@ -63,14 +61,16 @@ Arduino 	Bluetooth
 */
 
 #include <L298NMotorService.h>
-#include <UARTCmdReceiverService.h>
+#include <SerialCommands.h>
 
-#define DEBUG_SERIAl Serial
-#define UART_SERIAL Serial
+#define DEBUG_SERIAL Serial
+#define UART_SERIAL Serial3
+
+char serial_command_buffer[128];
+SerialCommands serial_commands(&UART_SERIAL, serial_command_buffer, sizeof(serial_command_buffer), "\r\n", " ");
 
 //-----------------------------------------------------------------------------------------
 // Define the host and the supported services
-UARTCmdReceiverService uartService(&UART_SERIAL);
 L298NMotorService motorService;
 
 #define E1 2 // Left motor
@@ -82,35 +82,62 @@ L298NMotorService motorService;
 #define E4 8 // Left motor
 #define M4 9
 
+void cmd_unrecognized(SerialCommands *sender, const char *cmd)
+{
+	DEBUG_SERIAL.print("ERR:UNKNOW CMD[");
+	DEBUG_SERIAL.print(cmd);
+	DEBUG_SERIAL.println("]");
+}
+
+void cmd_driver(SerialCommands *sender)
+{
+	char *dcStr = sender->Next();
+	if (dcStr == NULL)
+	{
+		DEBUG_SERIAL.println("ERR:NO DRIVE CMD");
+		return;
+	}
+	int commandId = atoi(dcStr);
+	bool res = motorService.execute(commandId);
+
+	DEBUG_SERIAL.print("CMD:DRIVE->");
+	DEBUG_SERIAL.print(commandId);
+	DEBUG_SERIAL.print(",");
+	DEBUG_SERIAL.println(res ? "SUCCESS" : "FAIL");
+}
+
+void cmd_connected(SerialCommands *sender){
+	DEBUG_SERIAL.println("CMD:UART->CONNECTED");
+}
+
+void cmd_discon(SerialCommands *sender){
+	DEBUG_SERIAL.println("CMD:UART->DISCON");
+}
+
+//Note: Commands are case sensitive
+SerialCommand cmdDriver("DR", cmd_driver);
+SerialCommand cmdConnected("CONNECTED\r", cmd_connected);
+SerialCommand cmdDiscon("+DISC:SUCCESS\r", cmd_discon);
+
 void setup()
 {
-	DEBUG_SERIAl.begin(9600);
+	DEBUG_SERIAL.begin(9600);
+	UART_SERIAL.begin(9600);
 
 	motorService.addLeftMotor(E1, M1);
 	motorService.addLeftMotor(E4, M4);
 	motorService.addRightMotor(E2, M2);
 	motorService.addRightMotor(E3, M3);
 
-	DEBUG_SERIAl.println("System startup!");
+	serial_commands.SetDefaultHandler(cmd_unrecognized);
+	serial_commands.AddCommand(&cmdDriver);
+	serial_commands.AddCommand(&cmdConnected);
+	serial_commands.AddCommand(&cmdDiscon);
+
+	DEBUG_SERIAL.println("System startup!");
 }
 
 void loop()
 {
-	uartService.populate();
-
-	if (!uartService.hasValidCommand())
-	{
-		delay(10);
-		return;
-	}
-
-	int commandId = uartService.getCommandId();
-	uartService.invalidateCommand();
-
-	Serial.println(commandId);
-
-	bool res = motorService.execute(commandId);
-	Serial.print(commandId);
-	Serial.print(",");
-	Serial.println(res);
+	serial_commands.ReadSerial();
 }

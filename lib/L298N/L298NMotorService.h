@@ -36,11 +36,11 @@ Result format
 #define MAX_MOTORS 4
 
 // 0x70 - 0x7F motor commands
-#define CMD_ROBOT_FORWARD 0x70
-#define CMD_ROBOT_BACKWARD 0x71
-#define CMD_ROBOT_TURN_RIGHT 0x72
-#define CMD_ROBOT_TURN_LEFT 0x73
-#define CMD_ROBOT_STOP 0x74
+#define CMD_ROBOT_FORWARD 11
+#define CMD_ROBOT_BACKWARD 12
+#define CMD_ROBOT_TURN_RIGHT 13
+#define CMD_ROBOT_TURN_LEFT 14
+#define CMD_ROBOT_STOP 15
 
 class L298N;
 
