@@ -1,5 +1,25 @@
 #include "SerialCommands.h"
 
+bool endof(char *origin, char *compare)
+{
+	int compare_size = strlen(compare);
+	int origin_size = strlen(origin);
+	if (origin_size >= compare_size)
+	{
+		for (int i = 0; i < compare_size; i++)
+		{
+			if (compare[i] != origin[origin_size - compare_size + i])
+			{
+				continue;
+			}
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void SerialCommands::AddCommand(SerialCommand *command)
 {
 #ifdef SERIAL_COMMANDS_DEBUG
@@ -66,25 +86,24 @@ SERIAL_COMMANDS_ERRORS SerialCommands::ReadSerial()
 #endif
 			return SERIAL_COMMANDS_ERROR_BUFFER_FULL;
 		}
+		// 多种分隔符处理
 		bool equal = false;
-		if (buffer_pos_ >= term_size_)
+		int equal_size = 0;
+
+		for (int z = 0; z < term_len_; z++)
 		{
-			for (int i = 0; i < term_size_; i++)
+			if (endof(buffer_, term_[z]))
 			{
-				if (term_[i] != buffer_[buffer_pos_ - term_size_ + i])
-				{
-					equal = false;
-					continue;
-				}
-				{
-					equal = true;
-				}
+				equal_size = strlen(term_[z]);
+				equal = true;
+				break;
 			}
 		}
 
 		if (equal)
 		{
-			buffer_[buffer_pos_ - strlen(term_)] = '\0';
+
+			buffer_[buffer_pos_ - equal_size] = '\0';
 
 #ifdef SERIAL_COMMANDS_DEBUG
 			Serial.print("Received: [");
@@ -153,7 +172,11 @@ void SerialCommands::SetDefaultHandler(void (*function)(SerialCommands *, const 
 
 void SerialCommands::ClearBuffer()
 {
-	buffer_[0] = '\0';
+	for (int i = 0; i < buffer_len_; i++)
+	{
+		buffer_[i] = '\0';
+	}
+
 	buffer_pos_ = 0;
 }
 

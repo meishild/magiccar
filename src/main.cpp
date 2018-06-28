@@ -4,10 +4,10 @@ Depend:+9V电源、小车车架、轮胎以及电机、l298n控制板、蓝牙�
 
 控制命令:
 
-前进：   "DT 11\r\n" 
+前进：   "DT 11\r\n"  "DT 11$" 
 后退：   "DT 12\r\n"
-左转：   "DT 13\r\n"
-右转：   "DT 14\r\n"
+右转：   "DT 13\r\n"
+左转：   "DT 14\r\n"
 停止：   "DT 15\r\n"
 
 The circuit:
@@ -117,7 +117,9 @@ float dataSpeed = 0.0;
 
 //-----------------------------------------------------------------------------------------
 char serial_command_buffer[128];
-SerialCommands serial_commands(&UART_SERIAL, serial_command_buffer, sizeof(serial_command_buffer), "\r\n", " ");
+char *endChars[] = {"\r\n", "0"};
+char *splitChars = " ";
+SerialCommands serial_commands(&UART_SERIAL, serial_command_buffer, sizeof(serial_command_buffer), endChars, 2, splitChars);
 
 L298NMotorService motorService(openPwm);
 Ultrasoinc forwartUltrasoinc(TPIN, EPIN);
