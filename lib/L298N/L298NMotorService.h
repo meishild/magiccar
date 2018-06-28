@@ -44,14 +44,14 @@ class L298N;
 class L298NMotorService
 {
   public:
-	L298NMotorService();
+	L298NMotorService(bool pwsSpeed = false);
 
   public:
 	int state;
 
 	typedef bool (*Func)(void);
 	// Execute the command saved in the context. The result is output to the context.
-	bool execute(unsigned int commandId,unsigned int speed=0);
+	bool execute(unsigned int commandId, unsigned int speed = -1);
 
   public:
 	// Add a motor to the left set of the robot.
@@ -73,6 +73,7 @@ class L298NMotorService
 	L298N *m_rightMotors[MAX_MOTORS];
 
 	Func forwardSensorFuncs[MAX_SAFE_SENSOR];
+	bool m_pwsSpeed;
 };
 
 #endif // _L298N_MOTOR_SERVICE_H

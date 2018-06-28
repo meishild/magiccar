@@ -16,7 +16,7 @@ L298N::L298N(unsigned char e, unsigned char m, bool reverse /*= false*/)
 
 void L298N::forward(unsigned int speed /*= 0*/)
 {
-	if (speed == 0)
+	if (speed > 1000)
 	{
 		digitalWrite(m_e, LOW);
 	}
@@ -30,7 +30,7 @@ void L298N::forward(unsigned int speed /*= 0*/)
 
 void L298N::backward(unsigned int speed /*= 0*/)
 {
-	if (speed == 0)
+	if (speed > 1000)
 	{
 		digitalWrite(m_e, HIGH);
 	}
@@ -41,9 +41,9 @@ void L298N::backward(unsigned int speed /*= 0*/)
 	digitalWrite(m_m, LOW);
 }
 
-void L298N::stop(unsigned int speed /*= 0*/)
+void L298N::stop(unsigned int speed, bool slow)
 {
-	if (speed == 0)
+	if (!slow)
 	{
 		digitalWrite(m_e, LOW);
 	}
@@ -52,7 +52,9 @@ void L298N::stop(unsigned int speed /*= 0*/)
 		for (int i = speed; i >= 0; i--)
 		{
 			analogWrite(m_e, i);
+			delay(10);
 		}
+		digitalWrite(m_e, LOW);
 	}
 
 	digitalWrite(m_m, LOW);

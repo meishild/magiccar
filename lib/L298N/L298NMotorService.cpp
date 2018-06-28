@@ -24,8 +24,8 @@ void DEBUG_PRINT(T message)
 #define DEBUG_PRINT(message)
 #endif
 
-L298NMotorService::L298NMotorService()
-	: state(0)
+L298NMotorService::L298NMotorService(bool pwsSpeed)
+	: state(0), m_pwsSpeed(pwsSpeed)
 {
 	// initialize
 	for (int i = 0; i < MAX_MOTORS; i++)
@@ -105,13 +105,13 @@ void L298NMotorService::forward(unsigned int speed)
 		{
 			DEBUG_PRINT(" LF");
 			DEBUG_PRINT(i);
-			m_leftMotors[i]->forward();
+			m_leftMotors[i]->forward(speed);
 		}
 		if (m_rightMotors[i])
 		{
 			DEBUG_PRINT(" RF");
 			DEBUG_PRINT(i);
-			m_rightMotors[i]->forward();
+			m_rightMotors[i]->forward(speed);
 		}
 	}
 	state = STATE_FORWARD;
@@ -125,11 +125,11 @@ void L298NMotorService::backward(unsigned int speed)
 	{
 		if (m_leftMotors[i])
 		{
-			m_leftMotors[i]->backward();
+			m_leftMotors[i]->backward(speed);
 		}
 		if (m_rightMotors[i])
 		{
-			m_rightMotors[i]->backward();
+			m_rightMotors[i]->backward(speed);
 		}
 	}
 	state = STATE_BACKWORD;
@@ -145,13 +145,13 @@ void L298NMotorService::turnLeft(unsigned int speed)
 		{
 			DEBUG_PRINT(" LB");
 			DEBUG_PRINT(i);
-			m_leftMotors[i]->backward();
+			m_leftMotors[i]->backward(speed);
 		}
 		if (m_rightMotors[i])
 		{
 			DEBUG_PRINT(" RF");
 			DEBUG_PRINT(i);
-			m_rightMotors[i]->forward();
+			m_rightMotors[i]->forward(speed);
 		}
 	}
 	state = STATE_TURN_LEFT;
@@ -167,13 +167,13 @@ void L298NMotorService::turnRight(unsigned int speed)
 		{
 			DEBUG_PRINT(" LF");
 			DEBUG_PRINT(i);
-			m_leftMotors[i]->forward();
+			m_leftMotors[i]->forward(speed);
 		}
 		if (m_rightMotors[i])
 		{
 			DEBUG_PRINT(" RB");
 			DEBUG_PRINT(i);
-			m_rightMotors[i]->backward();
+			m_rightMotors[i]->backward(speed);
 		}
 	}
 	state = STATE_TURN_RIGHT;
@@ -187,11 +187,11 @@ void L298NMotorService::stop(unsigned int speed)
 	{
 		if (m_leftMotors[i])
 		{
-			m_leftMotors[i]->stop();
+			m_leftMotors[i]->stop(speed, m_pwsSpeed);
 		}
 		if (m_rightMotors[i])
 		{
-			m_rightMotors[i]->stop();
+			m_rightMotors[i]->stop(speed, m_pwsSpeed);
 		}
 	}
 	state = STATE_STOP;

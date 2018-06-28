@@ -59,11 +59,11 @@ Arduino 	Bluetooth
 
 /*
 待开发：
-1.状态信息获取。
+-1.状态信息获取。
 2.测速。
 3.控制开关。
 4.led展示。
-5.PWM调速，增加减速、加速模式。
+-5.PWM调速，增加减速、加速模式。
 */
 
 #include <L298NMotorService.h>
@@ -74,8 +74,6 @@ Arduino 	Bluetooth
 #define UART_SERIAL Serial3
 
 //-----------------------------------------------------------------------------------------
-L298NMotorService motorService;
-
 // 设置驱动轮
 #define E1 2 // Left motor
 #define M1 3
@@ -106,6 +104,8 @@ int uartState = 0;
 bool openUltrasonic = false;
 // 是否进行安全停止
 bool openSafeStop = true;
+// 是否使用pwd调速
+bool openPwm = true;
 
 // 数据
 // pwm,0不进行调速，直接进行最高速度
@@ -119,6 +119,7 @@ float dataSpeed = 0.0;
 char serial_command_buffer[128];
 SerialCommands serial_commands(&UART_SERIAL, serial_command_buffer, sizeof(serial_command_buffer), "\r\n", " ");
 
+L298NMotorService motorService(openPwm);
 Ultrasoinc forwartUltrasoinc(TPIN, EPIN);
 
 void cmd_unrecognized(SerialCommands *sender, const char *cmd)
@@ -209,6 +210,24 @@ void checkSelf()
 	else
 	{
 		DEBUG_SERIAL.println("CHECK SELF:FAIL");
+	}
+}
+
+void stepAddPwm()
+{
+	for (int i = pwmSpeed; i < 1024; i++)
+	{
+		pwmSpeed++;
+		delay(10);
+	}
+}
+
+void stepMinusPwm()
+{
+	for (int i = pwmSpeed; i >= 0; i--)
+	{
+		pwmSpeed--;
+		delay(10);
 	}
 }
 
