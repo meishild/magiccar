@@ -4,7 +4,7 @@ Depend:+9V电源、小车车架、轮胎以及电机、l298n控制板、蓝牙�
 
 控制命令:
 
-前进：   "DT 11\r\n"  "DT 11$" 
+前进：   "DT 11\r\n"  "DT 110" 
 后退：   "DT 12\r\n"
 右转：   "DT 13\r\n"
 左转：   "DT 14\r\n"
@@ -69,6 +69,7 @@ Arduino 	Bluetooth
 #include <L298NMotorService.h>
 #include <SerialCommands.h>
 #include <ultrasonic.h>
+#include <TaskScheduler.h>
 
 #define DEBUG_SERIAL Serial
 #define UART_SERIAL Serial3
@@ -167,22 +168,24 @@ SerialCommand cmdUARTDiscon("+DISC:SUCCESS\r", cmd_uart_discon);
 
 //-----------------------------------------------------------------------------------------
 
+void task_read_ultrasonic(){
+	if (forwartUltrasoinc.read() == ERROR)
+	{
+		DEBUG_SERIAL.println("SENSOR:READ ERROR");
+		return;
+	}
+	dataDistance = forwartUltrasoinc.distance;
+}
+
 bool sensor_ultrasonic_stop()
 {
-	dataDistance = forwartUltrasoinc.distance;
 	//是否进行安全检查
 	if (!openSafeStop)
 	{
 		return false;
 	}
 
-	if (forwartUltrasoinc.read() == ERROR)
-	{
-		DEBUG_SERIAL.println("SENSOR:READ ERROR");
-		return false;
-	}
-
-	if (forwartUltrasoinc.distance < SENSOR_SAFE)
+	if (dataDistance < SENSOR_SAFE)
 	{
 		DEBUG_SERIAL.print("SENSOR:STOP,");
 		DEBUG_SERIAL.print(forwartUltrasoinc.distance);
@@ -253,8 +256,13 @@ void setup()
 	serial_commands.AddCommand(&cmdUARTConnected);
 	serial_commands.AddCommand(&cmdUARTDiscon);
 
+	Sch.init();  // Initialize task scheduler
+	Sch.addTask(task_read_ultrasonic,0,100,1);
+	Sch.start();  // Start the task scheduler
+
 	delay(1000);
 	checkSelf();
+	
 	DEBUG_SERIAL.println("LOAD SETUP FINISH!");
 }
 
@@ -266,6 +274,7 @@ void loop()
 		checkSelf();
 		return;
 	}
+	Sch.dispatchTasks();
 
 	//实时获取驾驶状态
 	driveState = motorService.state;
