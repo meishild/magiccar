@@ -47,11 +47,6 @@ The pin number with the * suffix means you can change it to be any number.
 	M2			DC Motor
 ---------------------------------------------
 
-L298N reference: http://item.taobao.com/item.htm?spm=a1z09.2.9.11.fVbF4K&id=227289053&_u=4113ts22070
-
-* Created 4 October 2014
-* By Jeffrey Sun
-
 */
 
 #ifndef L298N_H
@@ -61,25 +56,17 @@ L298N reference: http://item.taobao.com/item.htm?spm=a1z09.2.9.11.fVbF4K&id=2272
 
 class L298N
 {
-public:
-	/*
-	The passed in pins will be set to be OUTPUT in the constructor.
-
-	@constructor
-	@param {unsigned char} e the pin index of Arduino which connects to the E1/2 pin of L298N.
-	@param {unsigned char} m the pin index of Arduino which connects to the M1/2 pin of L298N.
-	@param {bool} reverse indicate if reverse the direction.
-	*/
+  public:
 	L298N(unsigned char e, unsigned char m, bool reverse = false);
 
-public:
-	virtual void forward(unsigned int speed = 0);
-	virtual void backward(unsigned int speed = 0);
-	virtual void stop();
+  public:
+	void forward(unsigned int speed = 0);
+	void backward(unsigned int speed = 0);
+	void stop(unsigned int speed = 0);
 
-private:
-	unsigned char 	m_e; 
-	unsigned char 	m_m;
-	bool			m_reverse;
+  private:
+	unsigned char m_e;
+	unsigned char m_m;
+	bool m_reverse;
 };
 #endif // L298N_H

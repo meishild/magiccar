@@ -55,7 +55,15 @@ Arduino 	Bluetooth
  GND		 GND
  TX    		 RX
  RX			 TX
+*/
 
+/*
+待开发：
+1.状态信息获取。
+2.测速。
+3.控制开关。
+4.led展示。
+5.PWM调速，增加减速、加速模式。
 */
 
 #include <L298NMotorService.h>
@@ -82,8 +90,30 @@ L298NMotorService motorService;
 #define TPIN 11
 #define EPIN 12
 
-// 设置超声波安全距离
+// 设置安全距离，单位cm
 #define SENSOR_SAFE 10
+
+// 整体状态，0-待初始化，1-完成初始化。代码load完成状态改成1，系统异常改为-1。
+int state = 0;
+// 锁状态,0-已锁定无法操作，1-已解锁，锁定状态无法控制车辆。
+int lockState = 0;
+// 驾驶状态值,0-待机，1-前进，2-后退，3-左转，4-右转，5-停止
+int driveState = 0;
+// uart外部连接 0-未连接，1-已连接
+int uartState = 0;
+
+// 开关状态
+bool openUltrasonic = false;
+// 是否进行安全停止
+bool openSafeStop = true;
+
+// 数据
+// pwm,0不进行调速，直接进行最高速度
+int pwmSpeed = 0;
+// 前端检测距离
+float dataDistance = 0.0;
+// 车速
+float dataSpeed = 0.0;
 
 //-----------------------------------------------------------------------------------------
 char serial_command_buffer[128];
@@ -107,7 +137,7 @@ void cmd_driver(SerialCommands *sender)
 		return;
 	}
 	int commandId = atoi(dcStr);
-	bool res = motorService.execute(commandId);
+	bool res = motorService.execute(commandId, pwmSpeed);
 
 	DEBUG_SERIAL.print("CMD:DRIVE->");
 	DEBUG_SERIAL.print(commandId);
@@ -118,11 +148,13 @@ void cmd_driver(SerialCommands *sender)
 void cmd_uart_connected(SerialCommands *sender)
 {
 	DEBUG_SERIAL.println("CMD:UART->CONNECTED");
+	uartState = 1;
 }
 
 void cmd_uart_discon(SerialCommands *sender)
 {
 	DEBUG_SERIAL.println("CMD:UART->DISCON");
+	uartState = 0;
 }
 
 //Note: Commands are case sensitive
@@ -134,11 +166,19 @@ SerialCommand cmdUARTDiscon("+DISC:SUCCESS\r", cmd_uart_discon);
 
 bool sensor_ultrasonic_stop()
 {
-	if(forwartUltrasoinc.read() == ERROR){
+	dataDistance = forwartUltrasoinc.distance;
+	//是否进行安全检查
+	if (!openSafeStop)
+	{
+		return false;
+	}
+
+	if (forwartUltrasoinc.read() == ERROR)
+	{
 		DEBUG_SERIAL.println("SENSOR:READ ERROR");
 		return false;
 	}
-	
+
 	if (forwartUltrasoinc.distance < SENSOR_SAFE)
 	{
 		DEBUG_SERIAL.print("SENSOR:STOP,");
@@ -149,8 +189,35 @@ bool sensor_ultrasonic_stop()
 	return true;
 }
 
+//-----------------------------------------------------------------------------------------
+void checkSelf()
+{
+	state = 1;
+	if (openUltrasonic)
+	{
+		if (forwartUltrasoinc.read() == ERROR)
+		{
+			DEBUG_SERIAL.println("SENSOR:READ ERROR");
+			state = -1;
+		}
+	}
+
+	if (state == 1)
+	{
+		DEBUG_SERIAL.println("CHECK SELF:SUCCESS");
+	}
+	else
+	{
+		DEBUG_SERIAL.println("CHECK SELF:FAIL");
+	}
+}
+
+// ----
 void setup()
 {
+	state = 0;
+	lockState = 0;
+
 	DEBUG_SERIAL.begin(9600);
 	UART_SERIAL.begin(9600);
 
@@ -165,11 +232,23 @@ void setup()
 	serial_commands.AddCommand(&cmdUARTConnected);
 	serial_commands.AddCommand(&cmdUARTDiscon);
 
-	DEBUG_SERIAL.println("System startup!");
+	delay(1000);
+	checkSelf();
+	DEBUG_SERIAL.println("LOAD SETUP FINISH!");
 }
 
 void loop()
 {
+	if (state != 1)
+	{
+		delay(1000);
+		checkSelf();
+		return;
+	}
+
+	//实时获取驾驶状态
+	driveState = motorService.state;
+
 	SERIAL_COMMANDS_ERRORS err = serial_commands.ReadSerial();
 	if (err == SERIAL_COMMANDS_ERROR_BUFFER_FULL)
 	{

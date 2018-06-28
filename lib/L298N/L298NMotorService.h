@@ -33,38 +33,42 @@ Result format
 
 // #define ENABLE_DEBUG_MESSAGE
 
-class L298N;
+#define STATE_FORWARD 1
+#define STATE_BACKWORD 2
+#define STATE_TURN_RIGHT 3
+#define STATE_TURN_LEFT 4
+#define STATE_STOP 5
 
+class L298N;
 
 class L298NMotorService
 {
-public:
+  public:
 	L298NMotorService();
 
-public:
+  public:
+	int state;
 
 	typedef bool (*Func)(void);
 	// Execute the command saved in the context. The result is output to the context.
-	bool execute(unsigned int commandId);
+	bool execute(unsigned int commandId,unsigned int speed=0);
 
-public:
-
+  public:
 	// Add a motor to the left set of the robot.
 	bool addLeftMotor(unsigned char e, unsigned char m, bool reverse = false);
 	// Add a motor to the right set of the robot.
 	bool addRightMotor(unsigned char e, unsigned char m, bool reverse = false);
 	// Add a motor direction faction.
 	bool addForwardSafeSensor(Func func);
-	
 
-private:
-	void forward();
-	void backward();
-	void turnLeft();
-	void turnRight();
-	void stop();
+  private:
+	void forward(unsigned int speed);
+	void backward(unsigned int speed);
+	void turnLeft(unsigned int speed);
+	void turnRight(unsigned int speed);
+	void stop(unsigned int speed);
 
-private:
+  private:
 	L298N *m_leftMotors[MAX_MOTORS];
 	L298N *m_rightMotors[MAX_MOTORS];
 

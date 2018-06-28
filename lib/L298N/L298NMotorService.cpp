@@ -25,6 +25,7 @@ void DEBUG_PRINT(T message)
 #endif
 
 L298NMotorService::L298NMotorService()
+	: state(0)
 {
 	// initialize
 	for (int i = 0; i < MAX_MOTORS; i++)
@@ -82,7 +83,7 @@ bool L298NMotorService::addForwardSafeSensor(Func func)
 	return false;
 }
 
-void L298NMotorService::forward()
+void L298NMotorService::forward(unsigned int speed)
 {
 	DEBUG_PRINT("Move forward: ");
 	for (int i = 0; i < MAX_SAFE_SENSOR; i++)
@@ -92,7 +93,7 @@ void L298NMotorService::forward()
 			if (forwardSensorFuncs[i]())
 			{
 				DEBUG_PRINT_LN("sensor check stop");
-				stop();
+				stop(speed);
 				return;
 			}
 		}
@@ -113,10 +114,10 @@ void L298NMotorService::forward()
 			m_rightMotors[i]->forward();
 		}
 	}
-
+	state = STATE_FORWARD;
 	DEBUG_PRINT_LN(' ');
 }
-void L298NMotorService::backward()
+void L298NMotorService::backward(unsigned int speed)
 {
 	DEBUG_PRINT("Move backward: ");
 
@@ -131,10 +132,10 @@ void L298NMotorService::backward()
 			m_rightMotors[i]->backward();
 		}
 	}
-
+	state = STATE_BACKWORD;
 	DEBUG_PRINT_LN(' ');
 }
-void L298NMotorService::turnLeft()
+void L298NMotorService::turnLeft(unsigned int speed)
 {
 	DEBUG_PRINT("Turn left: ");
 
@@ -153,25 +154,35 @@ void L298NMotorService::turnLeft()
 			m_rightMotors[i]->forward();
 		}
 	}
-
+	state = STATE_TURN_LEFT;
 	DEBUG_PRINT_LN(' ');
 }
-void L298NMotorService::turnRight()
+void L298NMotorService::turnRight(unsigned int speed)
 {
+	DEBUG_PRINT("Turn right: ");
+
 	for (int i = 0; i < MAX_MOTORS; i++)
 	{
 		if (m_leftMotors[i])
 		{
+			DEBUG_PRINT(" LF");
+			DEBUG_PRINT(i);
 			m_leftMotors[i]->forward();
 		}
 		if (m_rightMotors[i])
 		{
+			DEBUG_PRINT(" RB");
+			DEBUG_PRINT(i);
 			m_rightMotors[i]->backward();
 		}
 	}
+	state = STATE_TURN_RIGHT;
+	DEBUG_PRINT_LN(' ');
 }
-void L298NMotorService::stop()
+void L298NMotorService::stop(unsigned int speed)
 {
+	DEBUG_PRINT("Stop: ");
+
 	for (int i = 0; i < MAX_MOTORS; i++)
 	{
 		if (m_leftMotors[i])
@@ -183,9 +194,11 @@ void L298NMotorService::stop()
 			m_rightMotors[i]->stop();
 		}
 	}
+	state = STATE_STOP;
+	DEBUG_PRINT_LN(' ');
 }
 
-bool L298NMotorService::execute(unsigned int commandId)
+bool L298NMotorService::execute(unsigned int commandId, unsigned int speed)
 {
 	bool handled = true;
 	/*
@@ -201,27 +214,27 @@ bool L298NMotorService::execute(unsigned int commandId)
 	{
 	case CMD_ROBOT_FORWARD:
 	{
-		forward();
+		forward(speed);
 	}
 	break;
 	case CMD_ROBOT_BACKWARD:
 	{
-		backward();
+		backward(speed);
 	}
 	break;
 	case CMD_ROBOT_TURN_RIGHT:
 	{
-		turnRight();
+		turnRight(speed);
 	}
 	break;
 	case CMD_ROBOT_TURN_LEFT:
 	{
-		turnLeft();
+		turnLeft(speed);
 	}
 	break;
 	case CMD_ROBOT_STOP:
 	{
-		stop();
+		stop(speed);
 	}
 	break;
 	default:
