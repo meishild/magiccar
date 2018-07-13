@@ -187,11 +187,11 @@ void L298NMotorService::stop(unsigned int speed)
 	{
 		if (m_leftMotors[i])
 		{
-			m_leftMotors[i]->stop(speed, m_pwsSpeed);
+			m_leftMotors[i]->stop(speed);
 		}
 		if (m_rightMotors[i])
 		{
-			m_rightMotors[i]->stop(speed, m_pwsSpeed);
+			m_rightMotors[i]->stop(speed);
 		}
 	}
 	state = STATE_STOP;

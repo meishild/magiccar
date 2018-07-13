@@ -62,7 +62,7 @@ class L298N
   public:
 	void forward(unsigned int speed = 1023);
 	void backward(unsigned int speed = 1023);
-	void stop(unsigned int speed = 1023, bool slow = false);
+	void stop(unsigned int speed = 1023);
 
   private:
 	unsigned char m_e;

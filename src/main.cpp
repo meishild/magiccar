@@ -75,7 +75,7 @@ Arduino 	Bluetooth
 #define UART_SERIAL Serial3
 
 //-----------------------------------------------------------------------------------------
-// 设置驱动轮
+// 设置驱动轮,需要支持PWM
 #define E1 2 // Left motor
 #define M1 3
 #define E2 4 // Right motor
@@ -92,6 +92,11 @@ Arduino 	Bluetooth
 // 设置安全距离，单位cm
 #define SENSOR_SAFE 10
 
+// 设置LED
+#define LED_CAR_STATUS 14
+#define LED_UART_STATUS 15
+#define LES_OPEN_SAFE_STOP 16
+
 // 整体状态，0-待初始化，1-完成初始化。代码load完成状态改成1，系统异常改为-1。
 int state = 0;
 // 锁状态,0-已锁定无法操作，1-已解锁，锁定状态无法控制车辆。
@@ -104,13 +109,13 @@ int uartState = 0;
 // 开关状态
 bool openUltrasonic = false;
 // 是否进行安全停止
-bool openSafeStop = true;
+bool openSafeStop = false;
 // 是否使用pwd调速
 bool openPwm = true;
 
 // 数据
-// pwm,0不进行调速，直接进行最高速度
-int pwmSpeed = 0;
+// pwm,直接进行最高速度
+int pwmSpeed = 1023;
 // 前端检测距离
 float dataDistance = 0.0;
 // 车速
@@ -168,13 +173,17 @@ SerialCommand cmdUARTDiscon("+DISC:SUCCESS\r", cmd_uart_discon);
 
 //-----------------------------------------------------------------------------------------
 
-void task_read_ultrasonic(){
-	if (forwartUltrasoinc.read() == ERROR)
+void task_read_ultrasonic()
+{
+	if (openUltrasonic)
 	{
-		DEBUG_SERIAL.println("SENSOR:READ ERROR");
-		return;
+		if (forwartUltrasoinc.read() == ERROR)
+		{
+			DEBUG_SERIAL.println("SENSOR:READ ERROR");
+			return;
+		}
+		dataDistance = forwartUltrasoinc.distance;
 	}
-	dataDistance = forwartUltrasoinc.distance;
 }
 
 bool sensor_ultrasonic_stop()
@@ -236,6 +245,11 @@ void stepMinusPwm()
 	}
 }
 
+void setLedStatus()
+{
+	//根据状态设置所有LED
+}
+
 // ----
 void setup()
 {
@@ -256,13 +270,13 @@ void setup()
 	serial_commands.AddCommand(&cmdUARTConnected);
 	serial_commands.AddCommand(&cmdUARTDiscon);
 
-	Sch.init();  // Initialize task scheduler
-	Sch.addTask(task_read_ultrasonic,0,100,1);
-	Sch.start();  // Start the task scheduler
+	Sch.init(); // Initialize task scheduler
+	Sch.addTask(task_read_ultrasonic, 0, 100, 1);
+	Sch.start(); // Start the task scheduler
 
 	delay(1000);
 	checkSelf();
-	
+
 	DEBUG_SERIAL.println("LOAD SETUP FINISH!");
 }
 

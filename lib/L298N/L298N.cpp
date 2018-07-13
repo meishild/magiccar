@@ -41,21 +41,8 @@ void L298N::backward(unsigned int speed /*= 0*/)
 	digitalWrite(m_m, LOW);
 }
 
-void L298N::stop(unsigned int speed, bool slow)
+void L298N::stop(unsigned int speed)
 {
-	if (!slow)
-	{
-		digitalWrite(m_e, LOW);
-	}
-	else
-	{
-		for (int i = speed; i >= 0; i--)
-		{
-			analogWrite(m_e, i);
-			delay(10);
-		}
-		digitalWrite(m_e, LOW);
-	}
-
+	digitalWrite(m_e, LOW);
 	digitalWrite(m_m, LOW);
 }
